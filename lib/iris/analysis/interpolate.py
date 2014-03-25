@@ -647,10 +647,11 @@ def linear(cube, sample_points, extrapolation_mode='linear'):
 
     Kwargs:
 
-    * extrapolation_mode - string - one of 'linear', 'nan' or 'error'
+    * extrapolation_mode - string - one of 'linear', 'nearest', 'nan' or 'error'
 
         * If 'linear' the point will be calculated by extending the
           gradient of closest two points.
+        * If 'nearest' the closest point will be returned.
         * If 'nan' the extrapolation point will be put as a NAN.
         * If 'error' a value error will be raised notifying of the
           attempted extrapolation.
@@ -795,9 +796,13 @@ def linear(cube, sample_points, extrapolation_mode='linear'):
                 if fx.dtype.kind == 'i':
                     fx = fx.astype(np.promote_types(fx.dtype, np.float16))
                 x = src_points.astype(fx.dtype)
-                interpolator = interp1d(x, fx, kind='linear',
+                if extrapolation_mode == 'linear' or extrapolation_mode == 'nearest':
+                    mode = extrapolation_mode
+                else:
+                    mode = 'linear'
+                interpolator = interp1d(x, fx, kind=mode,
                                         bounds_error=bounds_error, **kwargs)
-                if extrapolation_mode == 'linear':
+                if extrapolation_mode == 'linear' or extrapolation_mode == 'nearest':
                     interpolator = Linear1dExtrapolator(interpolator)
                 new_fx = interpolator(np.array(new_x, dtype=fx.dtype))
                 return new_fx
